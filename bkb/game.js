@@ -36,6 +36,19 @@
 
     $('difficulty').value = String(S.difficulty);
     $('difficulty').onchange = function () { S.difficulty = Number(this.value); };
+
+    /* 字体大小：默认「大」，选择后记在本地 */
+    var fsSel = $('fontSize');
+    if (fsSel) {
+      var savedFs = 'l';
+      try { savedFs = localStorage.getItem('bkb_fs') || 'l'; } catch (e) {}
+      document.documentElement.setAttribute('data-fs', savedFs);
+      fsSel.value = savedFs;
+      fsSel.onchange = function () {
+        document.documentElement.setAttribute('data-fs', this.value);
+        try { localStorage.setItem('bkb_fs', this.value); } catch (e) {}
+      };
+    }
     $('players').value = String(S.botCount);
     $('players').onchange = function () { S.botCount = Number(this.value); newGame(); };
     $('restart').onclick = function () { newGame(); };

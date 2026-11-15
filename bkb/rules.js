@@ -135,14 +135,15 @@ window.BKB = window.BKB || {};
 
     function isSuicide(id) { var it = intents[id]; return it && it.kind === 'special' && it.actionId === 'suicide'; }
 
-    /* 0) 互攻点数相等 → 势均力敌，这一击互相抵消 */
+    /* 0) 互攻点数相等 → 势均力敌，这一击互相抵消；点数不等 → 低的一击作废。
+       豆系按 0 点算，所以豆跟任何物理/法术/天体对轰都必输。 */
     var dirDmg = {};
     players.forEach(function (attacker) {
       var it = intents[attacker.id];
       if (!it || it.kind !== 'attack') return;
       (it.strikes || []).forEach(function (s) {
         var a = act(s.actionId);
-        if (!a || a.cat === 'exotic') return;
+        if (!a) return;
         var dmg = a.dmg != null ? a.dmg : 0;
         (s.targets || []).forEach(function (tid) {
           var k = attacker.id + '>' + tid;
@@ -181,6 +182,8 @@ window.BKB = window.BKB || {};
        值 = 阶位 - 1 点（1 点 = 一枪），按点数消耗；只能挡低两级以上的招。
        但这一回合如果在攻击，真气被牵动 → 不设防。 */
     var autoCap = {};
+    /* 保佑挡物理时消耗的"护身气"，按人累计 */
+    var blessUsed = {};
     function tryAuto(id, d, attack) {
       var it = intents[id];
       if (it && it.kind === 'attack') return false;
@@ -236,6 +239,16 @@ window.BKB = window.BKB || {};
       var list = defensesOf(defenderId);
 
       function tryDefense(x) {
+        /* 保佑：也能挡同级的物理，按等级给"护身气"（0级1点、1级2点、2级4点、3级8点），挡下不反弹 */
+        if (x.cat === 'curse' && x.mode === 'shield' && attack.cat === 'physical') {
+          if (attack.level > x.level) { kill(defenderId, x.name + '挡不住更高等级的物理'); return 'killed'; }
+          var capB = Math.pow(2, x.level);
+          var usedB = blessUsed[defenderId] || 0;
+          var dmgB = attack.dmg != null ? attack.dmg : 0;
+          if (usedB + dmgB > capB + 1e-9) { kill(defenderId, x.name + '的护身气不够，被压垮'); return 'killed'; }
+          blessUsed[defenderId] = usedB + dmgB;
+          return 'blocked';
+        }
         if (attack.cat !== x.cat && x.cat !== 'move') return null;
         if (x.cat === 'move') {
           return (x.dodge || []).indexOf(attack.id) >= 0 ? 'blocked' : null;
