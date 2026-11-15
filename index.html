@@ -1,7 +1,276 @@
-<!DOCTYPE html>
-<html lang="zh-CN"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>围棋弹棋 · Go Carrom</title>
-<meta http-equiv="refresh" content="0; url=/go-carrom/">
-<style>body{margin:0;height:100vh;display:grid;place-items:center;background:#17110d;color:#f3e7d8;font-family:system-ui,sans-serif}a{color:#e8a44c}</style>
-</head><body><p>正在前往 <a href="/go-carrom/">围棋弹棋 · Go Carrom</a> …</p></body></html>
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<title>小游戏 · cyzhou2</title>
+<style>
+  /* 极简黑白：默认黑；系统报告浅色时自动转白；拿不到深色模式数据时保持黑 */
+  :root {
+    --bg: #0a0a0b;
+    --fg: #f2f2f3;
+    --dim: #8a8a90;
+    --line: #232326;
+    --card: #0e0e10;
+    --card-hover: #161619;
+    --ring: #f2f2f3;
+    color-scheme: dark;
+  }
+  html[data-theme="light"] {
+    --bg: #ffffff;
+    --fg: #0d0d0f;
+    --dim: #6a6a70;
+    --line: #e7e7ea;
+    --card: #fbfbfc;
+    --card-hover: #f3f3f5;
+    --ring: #0d0d0f;
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--bg);
+    color: var(--fg);
+    font: 15px/1.6 "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, "Segoe UI", sans-serif;
+    display: flex;
+    flex-direction: column;
+    padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right))
+             max(24px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+    transition: background .18s ease, color .18s ease;
+  }
+
+  header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin: 0 auto 26px;
+    width: 100%;
+    max-width: 1080px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .head-text { flex: 1 1 240px; min-width: 0; }
+  h1 {
+    margin: 0;
+    font-size: clamp(22px, 5vw, 30px);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p { margin: 6px 0 0; color: var(--dim); font-size: 13.5px; }
+
+  .theme-btn {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 13px;
+    min-height: 38px;
+    font: inherit;
+    font-size: 13px;
+    color: var(--fg);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: border-color .16s, background .16s;
+  }
+  .theme-btn:hover { border-color: var(--dim); }
+  .theme-btn:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+  .theme-btn .dot { width: 9px; height: 9px; border-radius: 50%; border: 1px solid currentColor; }
+
+  main {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+    gap: 16px;
+    width: 100%;
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    color: inherit;
+    text-decoration: none;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: border-color .16s, background .16s, transform .16s;
+  }
+  .card:hover { border-color: var(--dim); background: var(--card-hover); transform: translateY(-2px); }
+  .card:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+  .card:active { transform: none; }
+
+  .thumb {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    border-bottom: 1px solid var(--line);
+    overflow: hidden;
+  }
+  .thumb img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    filter: grayscale(1) contrast(1.05);
+    opacity: .72;
+    transition: filter .25s, opacity .25s, transform .4s;
+  }
+  .card:hover .thumb img { filter: grayscale(0); opacity: 1; transform: scale(1.03); }
+  html[data-theme="light"] .thumb img { opacity: .92; }
+
+  .meta { padding: 15px 16px 17px; }
+  h2 {
+    margin: 0 0 4px;
+    font-size: 17px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  h2 .roman {
+    font-size: 11.5px;
+    font-weight: 400;
+    color: var(--dim);
+    letter-spacing: .04em;
+  }
+  .meta p { margin: 0; color: var(--dim); font-size: 13px; }
+  .pill {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 3px 9px;
+    font-size: 11.5px;
+    color: var(--dim);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+  }
+
+  footer {
+    width: 100%;
+    max-width: 1080px;
+    margin: 30px auto 0;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    color: var(--dim);
+    font-size: 12px;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  footer a { color: var(--dim); text-decoration: none; border-bottom: 1px solid var(--line); }
+  footer a:hover { color: var(--fg); }
+
+  @media (max-width: 520px) {
+    body { font-size: 14px; }
+    header { margin-bottom: 18px; padding-bottom: 14px; }
+    .theme-btn { min-height: 36px; padding: 7px 11px; }
+    .thumb { aspect-ratio: 2 / 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="head-text">
+      <h1>小游戏</h1>
+      <p>三个可以直接开玩的浏览器游戏 · 无需安装 · 手机与电脑都适配</p>
+    </div>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="切换配色">
+      <span class="dot" aria-hidden="true"></span><span id="themeLabel">自动</span>
+    </button>
+  </header>
+
+  <main>
+    <a class="card" href="/bkb/">
+      <div class="thumb"><img src="/bkb/preview.png" alt="崩K崩 界面预览" loading="lazy" decoding="async"></div>
+      <div class="meta">
+        <h2>崩K崩<span class="roman">běng-k-běng</span></h2>
+        <p>回合制对战：出招、反弹、封印、自爆</p>
+        <span class="pill">单人 vs AI · 支持手机</span>
+      </div>
+    </a>
+
+    <a class="card" href="/go-carrom/">
+      <div class="thumb"><img src="/go-carrom/preview.png" alt="弹棋 界面预览" loading="lazy" decoding="async"></div>
+      <div class="meta">
+        <h2>弹棋<span class="roman">Go Carrom</span></h2>
+        <p>围棋盘上的冰壶弹射：自旋、摩擦、随机聚类摆盘</p>
+        <span class="pill">单人 vs AI / 双人 · 关卡编辑器</span>
+      </div>
+    </a>
+
+    <a class="card" href="/go-carrom/default/">
+      <div class="thumb"><img src="/go-carrom/preview.png" alt="弹棋无障碍版 界面预览" loading="lazy" decoding="async"></div>
+      <div class="meta">
+        <h2>弹棋 · 无障碍版<span class="roman">Zero Setup</span></h2>
+        <p>去掉所有设置项，按设备自动配好，打开就玩</p>
+        <span class="pill">电脑 19 路 3v3 · 手机 11 路 2v2</span>
+      </div>
+    </a>
+  </main>
+
+  <footer>
+    <span>cyzhou2.github.io</span>
+    <a href="https://github.com/cyzhou2" target="_blank" rel="noopener">GitHub</a>
+  </footer>
+
+<script>
+(function () {
+  var KEY = 'portal.theme';           // 'auto' | 'dark' | 'light'
+  var root = document.documentElement;
+  var btn = document.getElementById('themeBtn');
+  var label = document.getElementById('themeLabel');
+  var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
+  var mode = 'auto';
+
+  var NAMES = { auto: '自动', dark: '黑', light: '白' };
+
+  // 系统不支持 prefers-color-scheme 时 mq 为 null → 一律按黑处理
+  function resolve(m) {
+    if (m === 'dark' || m === 'light') return m;
+    return (mq && mq.matches) ? 'light' : 'dark';
+  }
+
+  function apply(m, save) {
+    mode = (m === 'dark' || m === 'light') ? m : 'auto';
+    root.setAttribute('data-theme', resolve(mode));
+    if (label) label.textContent = NAMES[mode];
+    if (btn) btn.setAttribute('title', '配色：' + NAMES[mode] + '（点击切换）');
+    if (save) { try { localStorage.setItem(KEY, mode); } catch (e) {} }
+  }
+
+  try {
+    var saved = localStorage.getItem(KEY);
+    if (saved === 'dark' || saved === 'light' || saved === 'auto') mode = saved;
+  } catch (e) {}
+
+  apply(mode, false);
+
+  var order = ['auto', 'dark', 'light'];
+  if (btn) {
+    btn.addEventListener('click', function () {
+      apply(order[(order.indexOf(mode) + 1) % order.length], true);
+    });
+  }
+
+  // 跟随系统变化（仅"自动"模式）
+  if (mq) {
+    var onChange = function () { if (mode === 'auto') apply('auto', false); };
+    if (mq.addEventListener) mq.addEventListener('change', onChange);
+    else if (mq.addListener) mq.addListener(onChange);
+  }
+})();
+</script>
+</body>
+</html>
