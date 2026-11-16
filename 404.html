@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<meta name="robots" content="noindex">
+<title>页面走丢了 · 返回游戏中心</title>
+<meta http-equiv="refresh" content="2; url=/">
+<style>
+  :root {
+    --bg: #0a0a0b; --fg: #f2f2f3; --dim: #8a8a90;
+    --line: #232326; --card: #0e0e10; --ring: #f2f2f3;
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg: #fff; --fg: #0d0d0f; --dim: #6a6a70; --line: #e7e7ea; --card: #fbfbfc; --ring: #0d0d0f; color-scheme: light; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100dvh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; padding: 28px;
+    background: var(--bg); color: var(--fg);
+    font: 15px/1.6 "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    text-align: center;
+  }
+  .code { font-size: 13px; letter-spacing: .32em; color: var(--dim); }
+  h1 { margin: 0; font-size: clamp(22px, 6vw, 30px); font-weight: 700; letter-spacing: -0.01em; }
+  p { margin: 0; color: var(--dim); font-size: 13.5px; max-width: 30em; }
+  a.btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 8px; padding: 11px 22px; min-height: 44px;
+    color: var(--fg); text-decoration: none; font-size: 14px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 999px;
+  }
+  a.btn:hover { border-color: var(--dim); }
+  a.btn:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+  code { font-size: 12px; color: var(--dim); word-break: break-all; }
+</style>
+</head>
+<body>
+  <div class="code">404</div>
+  <h1>这个页面走丢了</h1>
+  <p>可能是链接过期或地址敲错了。2 秒后自动回到游戏中心，也可以直接点下面的按钮。</p>
+  <p><code id="path"></code></p>
+  <a class="btn" href="/">← 返回游戏中心</a>
+<script>
+  (function () {
+    try {
+      var p = document.getElementById('path');
+      if (p) p.textContent = location.pathname + location.search;
+    } catch (e) {}
+    setTimeout(function () { location.replace('/'); }, 2000);
+  })();
+</script>
+</body>
+</html>
